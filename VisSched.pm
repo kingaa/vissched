@@ -52,7 +52,7 @@ sub frontpage {
     $q->p("Download a template input CSV file", 
 	  $q->a({'href'=>'input.csv'},'here.')),
     $q->start_multipart_form(-method=>'post',-action=>$CGINAME),
-    $q->p("File to upload:",
+    $q->p("CSV file to upload:",
 	  $q->filefield(-name=>'inputfile',-size=>'40')),
     $q->p("Number of tries:",
 	  $q->textfield(-name=>'ntries',-value=>$q->param('ntries'),-size=>'5'),
