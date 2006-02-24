@@ -12,7 +12,7 @@ float crowding_penalty = 0.1;
 float double_meeting_penalty = 100.0;
 float shared_major_prof_penalty = 10.0;
 
-#define HELP_MSG "\nUsage: %s [OPTIONS]\nSolve constrained schedule-optimization problem.\n\nOptions:\n\t[-t, -ntries=<arg>]\tset number of trials to <arg> (default=100)\n\t[-n, --nrand=<arg>]\tdo <arg> optimization steps per trial (default=5000)\n\t[-b, --nbest=<arg>]\tsave the <arg> best schedules (default=1)\n\t[-q, --quiet]\t\tsuppress progress information\n\t[-c, --curves]\t\tprint intermediate optimalities to stdout (for diagnostic purposes)\n\t[-i, --input=<arg>]\tget input from file <arg> (default=stdin)\n\t[-o, --output <arg>]\twrite output to file(s) <arg>XX.csv\n\t[-H, --help]\t\tprint this message\n\nInput must be in a particular form.  The related program visparse will read a CSV file and write the data in the form needed by %s to stdout.  Thus the command\n\t'visparse <CSV file> | %s [OPTIONS]'\nwill solve the scheduling problem.\n\n"
+#define HELP_MSG "\nUsage: %s [OPTIONS]\nSolve constrained schedule-optimization problem.\n\nOptions:\n\t[-t, -ntries=<arg>]\tset number of trials to <arg> (default=100)\n\t[-n, --nrand=<arg>]\tdo <arg> optimization steps per trial (default=5000)\n\t[-b, --nbest=<arg>]\tsave the <arg> best schedules (default=1)\n\t[-q, --quiet]\t\tsuppress progress information\n\t[-c, --curves]\t\tprint intermediate optimalities to stdout (for diagnostic purposes)\n\t[-i, --input=<arg>]\tget input from file <arg> (default=stdin)\n\t[-o, --output <arg>]\twrite output to file <arg>.csv\n\t[-H, --help]\t\tprint this message\n\nInput must be in a particular form.  The related program visparse will read a CSV file and write the data in the form needed by %s to stdout.  Thus the command\n\t'visparse <CSV file> | %s [OPTIONS]'\nwill solve the scheduling problem.\n\n"
 
 typedef struct {
   unsigned long len;
@@ -33,7 +33,7 @@ typedef struct {
   char *data;
 } schedule_t;
 
-int show_progress=1;
+int verbosity=2;
 int show_curves=0;
 
 void free_specs(spec_t *);
@@ -46,13 +46,14 @@ float weight(spec_t *, int, int);
 float benefit(schedule_t *, spec_t *);
 void random_schedule(schedule_t *, spec_t *);
 float optimize(schedule_t *, spec_t *, int);
-void write_csv_file(FILE *, spec_t *, schedule_t *);
+void write_csv_file (FILE *, spec_t *, int, float, schedule_t *);
 
 int main (int argc, char **argv)
 {
   int opt;
   int ntries = 100, nbest = 1, nrand = 5000;
   FILE *data = stdin;
+  int fileout = 0;
   char *outfile="sched";
   time_t t1, t2;
 
@@ -87,13 +88,14 @@ int main (int argc, char **argv)
       sscanf(optarg, "%d", &nbest);
       break;
     case 'q':
-      show_progress = 0;
+      verbosity--;
       break;
     case 'c':
       show_curves = 1;
       break;
     case 'o':
       outfile = optarg;
+      fileout = 1;
       break;
     case 'i':
       if ((data = fopen(optarg, "r")) == NULL) {
@@ -116,7 +118,7 @@ int main (int argc, char **argv)
     float *goodness, gmin, g;
     int j, k, kmin;
 
-    if (show_progress) {
+    if (verbosity > 1) {
       t1 = time(0);
       fprintf(stderr, "\n");
     }
@@ -124,7 +126,7 @@ int main (int argc, char **argv)
     specs = read_specs(data);
     fclose(data);
 
-    if (show_progress) fprintf(stderr, "#");
+    if (verbosity > 1) fprintf(stderr, "#");
 
     best = (schedule_t **) malloc(nbest * sizeof(schedule_t *));
     goodness = (float *) malloc(nbest * sizeof(float));
@@ -135,12 +137,12 @@ int main (int argc, char **argv)
       goodness[k] = benefit(current, specs);
     }
 
-    if (show_progress) fprintf(stderr, "#");
+    if (verbosity > 1) fprintf(stderr, "#");
 
     current = newschedule(specs);
     random_schedule(current, specs);
 
-    if (show_progress) 
+    if (verbosity > 1) 
       fprintf(stderr, "##############################");
 
     for (j = 0; j < ntries; j++) {
@@ -162,14 +164,14 @@ int main (int argc, char **argv)
 	  current = newschedule(specs);
 	}
       }
-      if (show_progress)
+      if (verbosity > 1)
 	if ( (j % (ntries/100+1)) == 0 ) {
 	  int p = 100*j/ntries;
 	  fprintf(stderr, "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b % 5d%% completed #######", p);
 	} 
     }
 
-    if (show_progress)
+    if (verbosity > 1)
       fprintf(stderr, "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b % 5d%% completed #######\n", 100);
 
     for (j = nbest-1; j >= 0; j--) {
@@ -186,23 +188,28 @@ int main (int argc, char **argv)
       best[kmin] = current;
     }
 
-    fprintf(stderr, "%s results\n", argv[0]);
-    for (k = 0; k < nbest; k++) {
-      char fname[BUFSIZ];
-      sprintf(fname, "%s%01d.csv", outfile, k+1);
-      if (!(data = fopen(fname, "w"))) {
-	fprintf(stderr, "error opening file %s\n", fname);
-	perror("main");
-	exit(-1);
-      }
-      fprintf(stderr, "file: %s, goodness: %f\n", fname, goodness[k]);
-      write_csv_file(data, specs, best[k]);
-      fclose(data);
-    }
+    if (verbosity > 0) 
+      fprintf(stderr, "%s results\n", argv[0]);
 
-    if (show_progress) {
+    if (fileout) {
+      char fname[BUFSIZ];
+      sprintf(fname, "%s.csv", outfile);
+      if (!(data = fopen(fname, "w"))) {
+	  fprintf(stderr, "error opening file %s\n", fname);
+	  perror("main");
+	  exit(-1);
+      }
+    } else {
+      data = stdout;
+    }
+    for (k = 0; k < nbest; k++) {
+      write_csv_file(data, specs, k+1, goodness[k], best[k]);
+    }
+    fclose(data);
+
+    if (verbosity > 1) {
       t2 = time(0);
-      fprintf(stderr, "%d trials, %d steps/trial, elapsed time: %ld sec\n", ntries, nrand, ((long) (t2 - t1)));
+	fprintf(stderr, "%d trials, %d steps/trial, elapsed time: %ld sec\n", ntries, nrand, ((long) (t2 - t1)));
     }
 
     for (k = 0; k < nbest; k++) free(best[k]);
@@ -476,11 +483,13 @@ float optimize (schedule_t *x, spec_t *y, int n)
   return g;
 }
 
-void write_csv_file (FILE *f, spec_t *y, schedule_t *x)
+void write_csv_file (FILE *f, spec_t *y, int option, float goodness, schedule_t *x)
 {
   int p, s, t, n, m;
   int v[BUFSIZ];
 
+  fprintf(f, "Option %d, goodness %f\n", option, goodness);
+  fprintf(f, "Student schedules\n");
   fprintf(f, "Student");
   for (t = 0; t < y->ntime; t++)
     fprintf(f, ", %s", y->times[t]);
@@ -539,6 +548,7 @@ void write_csv_file (FILE *f, spec_t *y, schedule_t *x)
     fprintf(f, "\n");
   }
 
+  fprintf(f, "Professor schedules\n");
   fprintf(f, "Professor");
   for (t = 0; t < y->ntime; t++)
     fprintf(f, ", %s", y->times[t]);
