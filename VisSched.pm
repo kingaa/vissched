@@ -1,11 +1,13 @@
 package VisSched;
 
-use 5.008007;
+use 5.8.8;
 use strict;
 use warnings;
 use CGI qw(:standard -nosticky -no_xhtml);
 use FileHandle;
 use IPC::Open2;
+use Text::CSV;
+use POSIX qw(strftime floor);
 
 require Exporter;
 
@@ -21,6 +23,7 @@ our @EXPORT = qw(
 		 $NBEST
 		 $NRAND
 		 $DOCFILE
+		 $LOGFILE
 		 );
 
 our $VERSION = '0.01';
@@ -31,6 +34,7 @@ our $NTRIES = 100;
 our $NBEST = 1;
 our $NRAND = 5000;
 our $DOCFILE = 'README.html';
+our $LOGFILE = 'vissched.log';
 
 sub init {
     my $q = shift;
@@ -42,6 +46,7 @@ sub init {
 
 sub frontpage {
     my $q = shift;
+    logger($q,'initial call');
     init($q);
     print $q->header(-expires=>'+0s'),
     $q->start_html(-title=>'vissched main page',-style=>{-src=>$CSSFILE}),
@@ -74,6 +79,7 @@ sub frontpage {
 
 sub verify {
     my $q = shift;
+    logger($q,'verify call');
     my $retval = 1;
     $retval = 0 if (!($q->param('inputfile')));
     $retval = 0 if (!($q->param('ntries')) or $q->param('ntries') < 1 or $q->param('ntries') > 1000);
@@ -98,7 +104,7 @@ sub verify {
 sub visparse {
 
     my $input = shift;
-
+    my $csv = Text::CSV->new();
     my (@profs, @avail, @times, @students, @weight, @openings);
     my ($nprof, $ntime, $nstudent, $type);
     my ($p, $s, $t);
@@ -108,8 +114,14 @@ sub visparse {
 
     $type = "n";
     foreach (@$input) {
- 	chop;
-	my @a = split /,\s*/;
+
+	if (!($csv->parse($_))) {
+	    my $err = $csv->error_input();
+	    die "cannot parse the line:\n$err\n";
+	}
+
+	my $status = $csv->parse($_);
+	my @a = $csv->fields();
 	my $len = scalar(@a);
 
 	if ($a[0] =~ /Availability/) {
@@ -145,23 +157,104 @@ sub visparse {
 	$openings[$t] = [@ope];
     }
 
+    @weight = map {
+	my $line = join ',', @$_; 
+	$line =~ s/,,/,0,/g; 	# replace missing entries with 0
+	$line =~ s/,,/,0,/g; 	# replace missing entries with 0
+	$line =~ s/,$/,0/g; 	# replace trailing missing entries with 0
+	$line =~ s/^,/0,/g; 	# replace leading missing entries with 0
+	$line =~ s/,/ /g;	# replace commas with spaces
+	$line;
+    } @weight;
+
     "$nprof $ntime $nstudent\n"
 	. join("\n",@profs) . "\n"
 	. join("\n",@times) . "\n"
 	. join("\n",@students) . "\n"
 	. join("\n",map {my $len = scalar(@{$_}); "$len @{$_}";} @openings) . "\n"
-	. join("\n",map {"@{$_}";} @weight) . "\n";
+	. join("\n",@weight) . "\n";
+}
+
+sub visparse_old {
+
+    my $input = shift;
+    my (@profs, @avail, @times, @students, @weight, @openings);
+    my ($nprof, $ntime, $nstudent, $type);
+    my ($p, $s, $t);
+
+    $t = 0;
+    $s = 0;
+
+    $type = "n";
+    foreach (@$input) {
+	s/\r\n/\n/g;		# go from DOS to unix format if necessary
+ 	chop;
+	
+	my @a = split /,\s*/, $_, -1; # do not drop trailing fields
+	my $len = scalar(@a);
+
+	if ($a[0] =~ /Availability/) {
+	    @profs = @a[1..$len-1];
+	    $type = "a";
+	} elsif ($a[0] =~ /Matches/) {
+	    @profs = @a[1..$len-1];
+	    $type = "m";
+	} elsif ($type =~ /a/) {
+	    $times[$t] = $a[0];
+	    $avail[$t] = [@a[1..$len-1]];
+	    $t += 1;
+	} elsif ($type =~ /m/) {
+	    $students[$s] = $a[0];
+	    $weight[$s] = [@a[1..$len-1]];
+	    $s += 1;
+	}
+    }
+
+    $nprof = scalar(@profs);
+    $ntime = scalar(@times);
+    $nstudent = scalar(@students);
+
+    for $t (0..$ntime-1) {
+	my ($j, $k, @ope);
+	$j = 0;
+	for $k (0..$nprof-1) {
+	    if (${$avail[$t]}[$k]) {
+		$ope[$j] = $k;
+		$j++;
+	    }
+	}
+	$openings[$t] = [@ope];
+    }
+
+    @weight = map {
+	my $line = join ',', @$_; 
+	$line =~ s/,,/,0,/g; 	# replace missing entries with 0
+	$line =~ s/,,/,0,/g; 	# replace missing entries with 0
+	$line =~ s/,$/,0/g; 	# replace trailing missing entries with 0
+	$line =~ s/^,/0,/g; 	# replace leading missing entries with 0
+	$line =~ s/,/ /g;	# replace commas with spaces
+	$line;
+    } @weight;
+
+    "$nprof $ntime $nstudent\n"
+	. join("\n",@profs) . "\n"
+	. join("\n",@times) . "\n"
+	. join("\n",@students) . "\n"
+	. join("\n",map {my $len = scalar(@{$_}); "$len @{$_}";} @openings) . "\n"
+	. join("\n",@weight) . "\n";
 }
 
 sub vissched {
     my $q = shift;
     my $file = $q->param('inputfile');
-    my @input = <$file>;
+    open(INPUT,"<$file") or die("cannot open input CSV file $file for reading: $!");
+    my @input = <INPUT>;
+    close(INPUT);
     my ($rh,$wh);
     my $ntries = $q->param('ntries');
     my $nrand = $q->param('nrand');
     my $nbest = $q->param('nbest');
-    my $pid = open2($rh,$wh,"nice ./vissched -qq --ntries=$ntries --nbest=$nbest --nrand=$nrand");
+    my $pid = open2($rh,$wh,"nice ./vissched --ntries=$ntries --nbest=$nbest --nrand=$nrand");
     print $wh visparse \@input;
     my @ans = <$rh>;
     @ans;
@@ -201,13 +294,34 @@ sub schedulepage {
 
 sub download {
     my $q = shift;
+    logger($q,'download call');
     my @sched = vissched $q;
     print $q->header(-type=>'application/x-download',
  		     -expires=>'+0s',
  		     -content_disposition=>'attachment;filename=output.csv');
     foreach (@sched) {
+	s/\n/\r\n/g;		# put the output into DOS format
 	print;
     }
+    1;
+}
+
+
+sub logger {
+    my $query = shift;
+    my $msg = shift;
+    open(LOG,">>$LOGFILE") 
+	or die("cannot open file $LOGFILE for writing: $!");
+    flock LOG, 2;
+    print LOG strftime("%c",gmtime()) 
+	. ' GMT ' 
+	. $msg 
+	. ' by '
+	. $query->remote_user 
+	. ' on ' 
+	. $query->remote_host 
+	. "\n";
+    close(LOG);
     1;
 }
 
@@ -217,7 +331,7 @@ __END__
 
 =head1 NAME
 
-VisSched - Perl extension for blah blah blah
+VisSched - Perl extension for Visit-Day Scheduler
 
 =head1 SYNOPSIS
 
