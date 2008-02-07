@@ -33,8 +33,8 @@ typedef struct {
   char *data;
 } schedule_t;
 
-int verbosity=2;
-int show_curves=0;
+int verbosity = 2;
+int show_curves = 0;
 
 void free_specs(spec_t *);
 spec_t *read_specs(FILE *);
