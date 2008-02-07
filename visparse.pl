@@ -7,8 +7,8 @@ my ($nprof, $ntime, $nstudent, $type);
 my ($p, $s, $t);
 my ($len, @a);
 
-$t = 0;
 $s = 0;
+$t = 0;
 
 $type = "n";
 while (<>) {
@@ -64,6 +64,9 @@ foreach $t (@openings) {
     $len = scalar(@{$t});
     print "$len @{$t}\n";
 }
-foreach $s (@weight) {
-    print "@{$s}\n";
+
+@weight = map {my $line = join ',', @$_; $line =~ s/,,/,0,/g; $line;} @weight;
+
+foreach (@weight) {
+    print "$_\n";
 }
