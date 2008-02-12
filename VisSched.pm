@@ -247,15 +247,16 @@ sub visparse_old {
 sub vissched {
     my $q = shift;
     my $file = $q->param('inputfile');
-    open(INPUT,"<$file") or die("cannot open input CSV file $file for reading: $!");
-    my @input = <INPUT>;
-    close(INPUT);
+##     open(INPUT,"<$file") or die("cannot open input CSV file $file for reading: $!");
+##     my @input = <INPUT>;
+##     close(INPUT);
+    my @input = <$file>;
     my ($rh,$wh);
     my $ntries = $q->param('ntries');
     my $nrand = $q->param('nrand');
     my $nbest = $q->param('nbest');
     my $pid = open2($rh,$wh,"nice ./vissched --ntries=$ntries --nbest=$nbest --nrand=$nrand");
-    print $wh visparse \@input;
+    print $wh visparse_old \@input;
     my @ans = <$rh>;
     @ans;
 }
