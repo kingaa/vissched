@@ -11,7 +11,7 @@ FILES = styley.css .htaccess README.html input.csv index.pl VisSched.pm vissched
 
 default: $(FILES) vissched index.cgi
 
-index.cgi: index.pl VisSched.pm
+index.cgi: index.pl
 
 install: default
 	$(INSTALL) index.cgi vissched $(FILES) $(INSTALLDIR)
