@@ -5,14 +5,16 @@ use strict;
 my (@profs, @avail, @times, @students, @weight, @openings);
 my ($nprof, $ntime, $nstudent, $type);
 my ($p, $s, $t);
-my ($len, @a);
+my ($len, $output, @a);
 
-$s = 0;
 $t = 0;
+$s = 0;
 
 $type = "n";
 while (<>) {
+    s/\r\n/\n/g;	     # go from DOS to unix format if necessary
     chop;
+
     @a = split /,\s*/;
     $len = scalar(@a);
 
@@ -50,23 +52,23 @@ for $t (0..$ntime-1) {
     $openings[$t] = [@ope];
 }
 
-print "$nprof $ntime $nstudent\n";
-foreach $p (@profs) {
-    print "$p\n";
-}
-foreach $t (@times) {
-    print "$t\n";
-}
-foreach $s (@students) {
-    print "$s\n";
-}
-foreach $t (@openings) {
-    $len = scalar(@{$t});
-    print "$len @{$t}\n";
-}
+@weight = map {
+    my $line = join ',', @$_; 
+    $line =~ s/,,/,0,/g; 	# replace missing entries with 0
+    $line =~ s/,,/,0,/g; 	# replace missing entries with 0
+    $line =~ s/,$/,0/g; 	# replace trailing missing entries with 0
+    $line =~ s/^,/0,/g; 	# replace leading missing entries with 0
+    $line =~ s/,/ /g;	# replace commas with spaces
+    $line;
+} @weight;
 
-@weight = map {my $line = join ',', @$_; $line =~ s/,,/,0,/g; $line;} @weight;
+$output = "$nprof $ntime $nstudent\n"
+    . join("\n",@profs) . "\n"
+    . join("\n",@times) . "\n"
+    . join("\n",@students) . "\n"
+    . join("\n",map {my $len = scalar(@{$_}); "$len @{$_}";} @openings) . "\n"
+    . join("\n",@weight) . "\n";
 
-foreach (@weight) {
-    print "$_\n";
-}
+
+print $output;
+
