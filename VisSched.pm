@@ -64,7 +64,7 @@ sub frontpage {
 	  "(must be between 1 and 1000)"),
     $q->p("Number of random swaps per try:",
 	  $q->textfield(-name=>'nrand',-value=>$q->param('nrand'),-size=>'5'),
-	  "(must be between 1 and 10000)"),
+	  "(must be between 1 and 40000)"),
     $q->p("Number of schedules to keep:",
 	  $q->textfield(-name=>'nbest',-value=>$q->param('nbest'),-size=>'5'),
 	  "(must be between 1 and 3)"),
@@ -83,7 +83,7 @@ sub verify {
     my $retval = 1;
     $retval = 0 if (!($q->param('inputfile')));
     $retval = 0 if (!($q->param('ntries')) or $q->param('ntries') < 1 or $q->param('ntries') > 1000);
-    $retval = 0 if (!($q->param('nrand')) or $q->param('nrand') < 1 or $q->param('nrand') > 10000);
+    $retval = 0 if (!($q->param('nrand')) or $q->param('nrand') < 1 or $q->param('nrand') > 40000);
     $retval = 0 if (!($q->param('nbest')) or $q->param('nbest') < 1 or $q->param('nbest') > 3);
     if ($retval == 0) {
  	print $q->header(-expires=>'+0s'),
