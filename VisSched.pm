@@ -6,7 +6,7 @@ use warnings;
 use CGI qw(:standard -nosticky -no_xhtml);
 use FileHandle;
 use IPC::Open2;
-use Text::CSV;
+use Text::CSV_XS;
 use POSIX qw(strftime floor);
 
 require Exporter;
@@ -46,16 +46,20 @@ sub init {
 
 sub frontpage {
     my $q = shift;
+    open(INPUT,"<$DOCFILE") or die("cannot open documentation file $DOCFILE for reading");
+    my @doc = <INPUT>;
+    close(INPUT);
     logger($q,'initial call');
     init($q);
     print $q->header(-expires=>'+0s'),
     $q->start_html(-title=>'vissched main page',-style=>{-src=>$CSSFILE}),
-    $q->h1('vissched main page'),
+#    $q->h1('vissched main page'),
     $q->hr,
-    $q->p("Read the documentation",
-	  $q->a({'href'=>$DOCFILE,'target'=>'_blank'},'here.')),
-    $q->p("Download a template input CSV file", 
-	  $q->a({'href'=>'input.csv'},'here.')),
+#     $q->p("Read the documentation",
+# 	  $q->a({'href'=>$DOCFILE,'target'=>'_blank'},'here.')),
+    $q->p(@doc),
+#     $q->p("Download a template input CSV file", 
+#  	  $q->a({'href'=>'input.csv'},'here.')),
     $q->start_multipart_form(-method=>'post',-action=>$CGINAME),
     $q->p("CSV file to upload:",
 	  $q->filefield(-name=>'inputfile',-size=>'40')),
