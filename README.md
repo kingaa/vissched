@@ -27,12 +27,12 @@ where `<dir>` is a webserver-accessible location.
 
 ## Detailed compilation instructions
 
-To compile the program, you must compile the C code "vissched.c".
-If you have gcc, for example, execute
+To compile the program, you must compile the C code `vissched.c`.
+If you have `gcc`, for example, execute
 ```
 gcc -O4 vissched.c -lm -o vissched
 ```
-Note the linking with the math library via the "-lm" option.  The accompanying Makefile will accomplish this as well.
+Note the linking with the math library via the `-lm` option.  The accompanying `Makefile` will accomplish this as well.
 
 Execute
 ```
@@ -41,9 +41,9 @@ Execute
 to get a message describing the various options.
 
 The input must be in a rigidly-defined format.
-Use the helper script "visparse.pl" to parse a CSV file into this format.
-The accompanying CSV file "input.csv" is in the proper format for parsing by "visparse.pl".
-You must have a working perl to use "visparse.pl".
+Use the helper script `visparse.pl` to parse a CSV file into this format.
+The accompanying CSV file `input.csv` is in the proper format for parsing by `visparse.pl`.
+You must have a working perl to use `visparse.pl`.
 
 Thus, for example, executing
 ```
