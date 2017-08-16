@@ -33,7 +33,7 @@ our $CSSFILE = './styley.css';
 our $NTRIES = 100;
 our $NBEST = 1;
 our $NRAND = 5000;
-our $DOCFILE = 'README.html';
+our $DOCFILE = 'doc.html';
 our $LOGFILE = 'vissched.log';
 
 sub init {

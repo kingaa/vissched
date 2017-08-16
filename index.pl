@@ -6,7 +6,7 @@ use CGI;
 use CGI::Carp qw(fatalsToBrowser set_message);
 
 set_message("It's not a bug, it's a feature!---Send questions, complaints, and commentaries to kingaa at umich dot edu");
-$VisSched::CGINAME = 'index.cgi';
+$VisSched::CGINAME = 'index.pl';
 
 my $query = new CGI;
 

@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+   <title>vissched: Visit-Day Scheduler</title>
+  <link type="text/css" rel="stylesheet" href="styley.css">
+  <meta name="author" content="Aaron King">
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+</head>
+
+<body>
+  <h2>vissched: Visit-Day Scheduler</h2>
+
+  <p>This tool uses simulated annealing for solving a complicated
+  scheduling problem. It is assumed that <em>M</em> visitors wish
+  to meet with <em>N</em> residents. There are <em>K</em>
+  time-slots available. Each resident may or may not be available
+  during any given time-slot. Each visitor wishes to meet with a
+  different subset of residents but does not care in which order
+  the meetings are to be held. Each visitor attaches a degree of
+  importance, or weight, to each resident, indicative of the desire
+  the visitor has to meet with the resident. Thus a weight of 1
+  indicates a very strong desire, a weight of 0.5 a somewhat
+  less-strong desire, and a weight of 0, complete indifference.</p>
+
+  <p>The algorithm attempts to find a schedule such that</p>
+
+  <ol>
+    <li>every visitor is meeting with someone during every
+    time-slot,</li>
+
+    <li>every visitor meets with every resident to which they have
+    attached a weight of 1, and</li>
+
+    <li>very few meetings are scheduled where more than one visitor
+    meets with a resident at one time.</li>
+  </ol>This is accomplished by assigning a measure of desirability,
+  "goodness", to each possible schedule and then maximizing the
+  goodness over the space of possible schedules by means of
+  simulated annealing.
+
+  <p>A template input file (in CSV format) is available <a href=
+  "input.csv">here</a>.</p>
+
+  <p>For details of the algorithm, which contains some adjustable
+  parameters, consult the C code in file <a href=
+  "vissched.c">vissched.c</a>.</p>
+
+  <p>
+    Kindly direct questions, bug reports, suggestions for improvements, and requests for the source code to the author via the package 
+    <a href="https://github.com/kingaa/vissched/issues">Issues page</a>.
+  </p>
+</body>
+</html>
