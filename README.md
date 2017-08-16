@@ -52,4 +52,4 @@ perl visparse.pl input.csv | ./vissched --ntries=100 --nbest=3 --output=out
 will result (after some time) in three CSV files, "out1.csv", "out2.csv", "out3.csv", which contain, respectively, the best, 2^nd^ best, and 3^rd^ best solutions found out of the 100 trials.
 
 For details of the algorithm, which contains some adjustable parameters, consult the C code in file "vissched.c".
-**Kindly direct questions, bug reports, and suggestions for improvements to the author, Aaron King <kingaa at umich dot edu>.**
+**Kindly direct questions, bug reports, and suggestions for improvements to the author, @kingaa.**
