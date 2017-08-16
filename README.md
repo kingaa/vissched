@@ -3,8 +3,8 @@
 ## Description
 
 This tool uses simulated annealing for solving a complicated scheduling problem.
-It is assumed that $M$ visitors wish to meet with $N$ residents.
-There are $K$ time-slots available.
+It is assumed that M visitors wish to meet with N residents.
+There are K time-slots available.
 Each resident may or may not be available during any given time-slot.
 Each visitor wishes to meet with a different subset of residents but does not care in which order the meetings are to be held.
 Each visitor attaches a degree of importance, or weight, to each resident, indicative of the desire the visitor has to meet with the resident.
