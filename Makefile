@@ -1,4 +1,5 @@
-INSTALLDIR = www
+INSTALLDIR = /var/www/html/vissched
+CONFDIR = /etc/apache2/conf-available
 
 RM = rm -f
 CP = cp
@@ -17,13 +18,13 @@ install: default vissched.conf
 	$(INSTALL) --mode=0644 $(FILES) $(INSTALLDIR)
 	>vissched.log
 	$(INSTALL) --mode=0666 vissched.log $(INSTALLDIR)
-	$(INSTALL) --mode=0600 vissched.conf /etc/apache2/conf-available
+	$(INSTALL) --mode=0600 vissched.conf $(CONFDIR)
 	a2enconf vissched
 
 uninstall:
 	a2disconf vissched
 	$(RM) -r $(INSTALLDIR)
-	$(RM) /etc/apache2/conf-available/vissched.conf
+	$(RM) $(CONFDIR)/vissched.conf
 
 %: %.c
 	$(CC) $(CFLAGS) $*.c $(LDLIBS) -o $*

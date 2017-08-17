@@ -17,4 +17,3 @@ if (!($query->param('upload'))) {
 }
 
 exit;
-

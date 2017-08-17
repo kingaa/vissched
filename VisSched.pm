@@ -17,6 +17,7 @@ our @EXPORT = qw(
 		 frontpage
 		 verify
 		 download
+		 visparse
 		 $CGINAME
 		 $CSSFILE
 		 $NTRIES
@@ -108,7 +109,7 @@ sub verify {
 sub visparse {
 
     my $input = shift;
-    my $csv = Text::CSV->new();
+    my $csv = Text::CSV_XS->new();
     my (@profs, @avail, @times, @students, @weight, @openings);
     my ($nprof, $ntime, $nstudent, $type);
     my ($p, $s, $t);
@@ -260,7 +261,7 @@ sub vissched {
     my $nrand = $q->param('nrand');
     my $nbest = $q->param('nbest');
     my $pid = open2($rh,$wh,"nice ./vissched --ntries=$ntries --nbest=$nbest --nrand=$nrand");
-    print $wh visparse_old \@input;
+    print $wh visparse \@input;
     my @ans = <$rh>;
     @ans;
 }
@@ -345,17 +346,9 @@ VisSched - Perl extension for Visit-Day Scheduler
 
 =head1 DESCRIPTION
 
-Stub documentation for VisSched, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
-
-Blah blah blah.
+Parses input files and runs scheduling algorithm.
 
 =head2 EXPORT
-
-None by default.
-
-
 
 =head1 SEE ALSO
 
