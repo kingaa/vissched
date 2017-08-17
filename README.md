@@ -3,7 +3,7 @@
 ## Description
 
 This tool uses simulated annealing for solving a complicated scheduling problem.
-It is assumed that M visitors wish to meet with N residents.
+It is assumed that M visitors (students) wish to meet with N residents (professors).
 There are K time-slots available.
 Each resident may or may not be available during any given time-slot.
 Each visitor wishes to meet with a different subset of residents but does not care in which order the meetings are to be held.
@@ -16,7 +16,7 @@ The algorithm attempts to find a schedule such that
 (3) very few meetings are scheduled where more than one visitor meets with a resident at one time.
 This is accomplished by assigning a measure of desirability, "goodness", to each possible schedule and then maximizing the goodness over the space of possible schedules by means of simulated annealing.
 
-## Installation
+## As a web application
 
 Do
 ```
@@ -25,14 +25,12 @@ make INSTALLDIR=<dir> install
 ```
 where `<dir>` is a webserver-accessible location.
 
-## Detailed compilation instructions
+## As a stand-alone application
 
-To compile the program, you must compile the C code `vissched.c`.
-If you have `gcc`, for example, execute
+To compile the program, execute
 ```
-gcc -O4 vissched.c -lm -o vissched
+make
 ```
-Note the linking with the math library via the `-lm` option.  The accompanying `Makefile` will accomplish this as well.
 
 Execute
 ```
@@ -49,7 +47,7 @@ Thus, for example, executing
 ```
 perl visparse.pl input.csv | ./vissched --ntries=100 --nbest=3 --output=out
 ```
-will result (after some time) in three CSV files, "out1.csv", "out2.csv", "out3.csv", which contain, respectively, the best, 2^nd^ best, and 3^rd^ best solutions found out of the 100 trials.
+will result (after some time) in three CSV files, `out1.csv`, `out2.csv`, `out3.csv`, which contain, respectively, the best, 2nd best, and 3rd best solutions found out of the 100 trials.
 
-For details of the algorithm, which contains some adjustable parameters, consult the C code in file "vissched.c".
+For details of the algorithm, which contains some adjustable parameters, consult the C code in file `vissched.c`.
 **Kindly direct questions, bug reports, and suggestions for improvements to the author, @kingaa via the [Issues facility](https://github.com/kingaa/vissched/issues).**
